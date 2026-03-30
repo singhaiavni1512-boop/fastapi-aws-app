@@ -1,34 +1,18 @@
-name: Deploy to AWS
+script: |
+  if [ ! -d "fastapi-aws-app" ]; then
+    git clone https://github.com/singhaiavni1512-boop/fastapi-aws-app.git
+  fi
 
-on:
-  push:
-    branches:
-      - main
+  cd fastapi-aws-app
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  git pull origin main
 
-    steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            if [ ! -d "fastapi-aws-app" ]; then
-              git clone https://github.com/singhaiavni1512-boop/fastapi-aws-app.git
-            fi
+  python3 -m venv venv || true
+  source venv/bin/activate
 
-            cd fastapi-aws-app
-            git pull origin main
+  echo -e "fastapi\nuvicorn" > requirements.txt
+  pip install -r requirements.txt
 
-            python3 -m venv venv || true
-            source venv/bin/activate
+  pkill -f uvicorn || true
 
-            pip install -r requirements.txt
-
-            pkill -f uvicorn || true
-
-            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > output.log 2>&1 &
+  nohup uvicorn main:app --host 0.0.0.0 --port 8000 > output.log 2>&1 &
