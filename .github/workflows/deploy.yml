@@ -1,26 +1,38 @@
-steps:
-  - name: Debug EC2_HOST
-    run: echo "Host is ${{ secrets.EC2_HOST }}"
+name: Deploy to AWS
 
-  - name: Deploy to EC2
-    uses: appleboy/ssh-action@v1.0.3
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ubuntu
-      key: ${{ secrets.EC2_KEY }}
-      script: |
-        if [ ! -d "fastapi-aws-app" ]; then
-          git clone https://github.com/singhaiavni1512-boop/fastapi-aws-app.git
-        fi
+on:
+  push:
+    branches:
+      - main
 
-        cd fastapi-aws-app
-        git reset --hard HEAD
-        git pull origin main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-        python3 -m venv venv || true
-        source venv/bin/activate
+    steps:
+      - name: Debug EC2_HOST
+        run: echo "Host is ${{ secrets.EC2_HOST }}"
 
-        pip install -r requirements.txt
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            if [ ! -d "fastapi-aws-app" ]; then
+              git clone https://github.com/singhaiavni1512-boop/fastapi-aws-app.git
+            fi
 
-        pkill -f uvicorn || true
-        nohup uvicorn main:app --host 0.0.0.0 --port 8000 > output.log 2>&1 &
+            cd fastapi-aws-app
+
+            git reset --hard HEAD
+            git pull origin main
+
+            python3 -m venv venv || true
+            source venv/bin/activate
+
+            pip install -r requirements.txt
+
+            pkill -f uvicorn || true
+            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > output.log 2>&1 &
