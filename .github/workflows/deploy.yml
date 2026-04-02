@@ -5,12 +5,12 @@ script: |
 
   cd fastapi-aws-app
 
+  git reset --hard HEAD
   git pull origin main
 
   python3 -m venv venv || true
   source venv/bin/activate
 
-  echo -e "fastapi\nuvicorn" > requirements.txt
   pip install -r requirements.txt
 
   pkill -f uvicorn || true
